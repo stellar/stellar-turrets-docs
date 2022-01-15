@@ -1,0 +1,555 @@
+openapi: 3.0.3
+info:
+  version: 0.1.1
+  title: Turing Signing Server Reference Documentation
+  contact:
+    url: "https://tss.stellar.org/"
+  license:
+    name: GPL-3.0 License
+    url: "https://www.gnu.org/licenses/gpl-3.0.en.html"
+  x-logo:
+    url: >-
+      https://raw.githubusercontent.com/tyvdh/stellar-turrets/master/assets/tss-logo.png
+    altText: Stellar Turrets Home Page
+  description: |
+    Stellar Turrets provide decentralizated contract creation on Stellar.
+tags:
+  - name: Turret
+    description: View information about a Turret
+  - name: txFunctions
+    description: >
+      Manage and run txFunctions on the Turret. A txFuntion is a JavaScript file
+      that outputs a valid Transaction Envelope XDR. The txFunction will be
+      executed in a node environment with the following default node_module
+      packages:
+        * bignumber.js
+        * node-fetch
+        * stellar-sdk
+  - name: Fees
+    description: >
+      Manage and view Fee Balances on the Turret. A Fee Balance is an XLM based
+      balance that the Turret will accrue fees against as txFunctions are run. A
+      Fee Balance is unique to a Stellar account Public Key.
+  - name: Control Accounts
+    description: Control Turret accounts.
+paths:
+  /:
+    get:
+      tags:
+        - Turret
+      summary: Get turret information
+      operationId: getTurretInfo
+      description: |
+        Returns basic information about the turret
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TurretInfo"
+  /.well-known/stellar.toml:
+    get:
+      tags:
+        - Turret
+      summary: Get the turrets toml file
+      operationId: getToml
+      description: |
+        Returns the stellar.toml file associated with the turret
+      responses:
+        "200":
+          description: >
+            A [Stellar
+            TOML](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0001.md)
+            file
+  /tx-functions:
+    post:
+      tags:
+        - txFunctions
+      summary: Upload a txFunction
+      operationId: uploadTxFunction
+      description: Uploads a txFunction to the turret.
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/TxFuncUploadForm"
+            example:
+              txFunction: /some/path/txFunction.js
+              txFunctionFields: >-
+                W3sibmFtZSI6ImRlc3RpbmF0aW9uIiwidHlwZSI6InN0cmluZyIsImRlc2NyaXB0aW9uIjoiU3RlbGxhciBwdWJsaWMga2V5IHlvdSdkIGxpa2UgdG8gcGF5IiwicnVsZSI6Ik11c3QgYmUgYSB2YWxpZCBhbmQgZnVuZGVkIFN0ZWxsYXIgcHVibGljIGtleSJ9XQ
+              txFunctionFee: >-
+                AAAAAgAAAABTqjFHz0quLSka8SOrkw7R07aqDNUHAe+Qm5PX0jMiGwAAAGQAHfBZAAAADgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAB47DPzhNMoutc7krUC+kJ1BvEel4wkn4w1qzA7sOje0AAAAAAAAAAAAJiWgAAAAAAAAAAB0jMiGwAAAEAZjWTnxXY2lxVt0VSos6/Uvpoo3pXo6l+0Xk/P+sE5KDPwhAYkVQyXEBb8prEYprzp3aSlLF4TKcw3m/RM5IMK
+        required: true
+      responses:
+        "200":
+          description: txFunction uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractUploadResponse"
+        "402":
+          description: payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRequired"
+  "/tx-functions/{txFunctionHash}":
+    get:
+      tags:
+        - txFunctions
+      summary: Get txFunction information
+      operationId: getTxFunctionInfo
+      description: |
+        Returns information about an uploaded txFunction
+      parameters:
+        - name: txFunctionHash
+          in: path
+          required: true
+          description: The hash value of the txFunction
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TxFunctionInfo"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: Unable to find txFunction
+                status: 404
+    post:
+      tags:
+        - txFunctions
+      summary: Run a txFunction
+      operationId: executeTxFunction
+      description: Executes a txFunction on the turret
+      security:
+        - XdrToken: []
+      parameters:
+        - name: txFunctionHash
+          in: path
+          required: true
+          description: The hash value of the txFunction
+          schema:
+            type: string
+      requestBody:
+        description: The fields for the contract being run.
+        content:
+          application/json:
+            schema:
+              type: object
+            example:
+              txFunctionField: some input
+              anotherTxFunctionField: some other input
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TxFunctionResult"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: Unable to find txFunction
+                status: 404
+  /tx-fees:
+    get:
+      tags:
+        - Fees
+      summary: View the fee balance for a public key
+      operationId: getFees
+      description: >-
+        View the fee balance for a public key based on the authorized public
+        key.
+      security:
+        - XdrToken: []
+      responses:
+        "200":
+          description: Fee payment applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeePaymentResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: Error message specific to failure
+                status: 404
+  "/tx-fees/{publicKey}":
+    post:
+      tags:
+        - Fees
+      summary: Send a fee payment to the turret
+      operationId: payFees
+      description: Sends a fee payment to the turret
+      parameters:
+        - name: publicKey
+          in: path
+          required: true
+          description: >-
+            The Stellar public address of the account to apply the fee payment
+            to
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeePaymentForm"
+            example:
+              txFunctionFee: >-
+                AAAAAgAAAABTqjFHz0quLSka8SOrkw7R07aqDNUHAe+Qm5PX0jMiGwAAAGQAHfBZAAAADgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAB47DPzhNMoutc7krUC+kJ1BvEel4wkn4w1qzA7sOje0AAAAAAAAAAAAJiWgAAAAAAAAAAB0jMiGwAAAEAZjWTnxXY2lxVt0VSos6/Uvpoo3pXo6l+0Xk/P+sE5KDPwhAYkVQyXEBb8prEYprzp3aSlLF4TKcw3m/RM5IMK
+        required: true
+      responses:
+        "200":
+          description: Fee payment applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeePaymentResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                message: Error message specific to failure
+                status: 404
+  /ctrl-accounts:
+    put:
+      tags:
+        - Control Accounts
+      summary: Manage turrets tied to txFunctions
+      operationId: updateCtrlAccounts
+      description: >-
+        Allows for healing a signer on a txFunction if the majority of trusted
+        turrets approve it.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CtrlAccounts"
+        required: true
+      responses:
+        "200":
+          description: txFunction uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CtrlAccountsResult"
+components:
+  securitySchemes:
+    XdrToken:
+      name: Turret XDR Token
+      description: >
+        The Turret XDR Token is a signed transaction envelope XDR that is signed
+        by the account seeking authentication's public key. The signed XDR, or
+        XDR Token, is provided as a Authorization Bearer token to the Turret.
+
+        ### Xdr Token Structure
+
+        The Xdr Token Transaction is a Stellar transaction that authenticates
+        public key ownership against a Turret. It MUST have a Sequence Number of
+        0 to ensure the transaction is not malicious and is unable to be
+        submitted. The following information will be pulled from the Xdr Token
+        Transaction:
+
+        * Sequence Number
+          * Verify the sequence number is 0 - if not, reject the token.
+        * Source account
+          * The account that is paying fees in to the turret through the claimable balance
+        * Timebounds
+          * The max time of the timebounds will be the absolute UNIX expiration time of the token.
+        * Operations
+          * ClaimClaimableBalance
+            * The Balance Id of the Claimable Fee Balance (of the structure show below) of the fee payment to the turret.
+          * ManageData
+            * Used to pass token parameters into the turret
+            * Valid parameters
+              * Entry name = "txFunction" (If no txFunctions parameters are passed in, the turret does not limit any txFunctions to run)
+                * Value = the hash of the txFunction that the user is allowing the turret to run
+        * Signature
+          * The Fee Transaction is signed by the account that is the source account of the transaction
+
+        ### Example
+
+        This  <a href="https://runkit.com/mootz12/60d1f69582e0580013bb591e"
+        target="_blank">RunKit Example</a>  showcases how to generate a XDR
+        Token. It creates, signs, and generates a valid Authorization token.
+      type: http
+      scheme: bearer
+      bearerFormat: XDR
+      x-examples:
+        header: test
+  schemas:
+    Fee:
+      type: object
+      properties:
+        min:
+          description: The minimum claimable fee balance allowed
+          type: string
+          example: 1
+        max:
+          description: The maximum claimable fee balance allowed
+          type: string
+          example: 10
+        days:
+          description: >-
+            The time allowed before the claimable fee balance is reclaimable by
+            the user
+          type: string
+          example: 180
+    Divisor:
+      type: object
+      properties:
+        upload:
+          description: The divisor used in fee calculations for uploading functions
+          type: string
+          example: 1000
+        run:
+          description: The divisor used in fee calculations for running functions
+          type: string
+          example: 100000
+    TurretInfo:
+      type: object
+      properties:
+        turret:
+          description: The public key of the turret owner
+          type: string
+          example: GB4OYM7TQTJSROWXHOJLKAX2IJ2QN4I6S6GCJH4MGWVTAO5Q5DPNADXX
+        network:
+          description: The Stellar Network the turret is on. TESTNET or PUBLIC
+          type: string
+          example: TESTNET
+        horizon:
+          description: The Horizon API the turret uses
+          type: string
+          example: "https://horizon-testnet.stellar.org"
+        version:
+          description: The repository version and last commit
+          type: string
+          example: v0.0.0-ff9e9750369cc8aed29af9f08ae34634594cbe41
+        fee:
+          $ref: "#/components/schemas/Fee"
+        divisor:
+          $ref: "#/components/schemas/Divisor"
+    TxFuncUploadForm:
+      type: object
+      properties:
+        txFunction:
+          description: The source code to be uploaded
+          type: string
+          example: /some/path/txFunction.js
+        txFunctionFields:
+          description: >
+            A Base64 encoded array of json object of the input fields for the
+            contract in this format: <pre>
+              <code>
+              [
+                { 
+                  "name": "paramName", 
+                  "type": "string", 
+                  "description": "This is a param", 
+                  "rule": "Required"
+                }
+              ]
+              </code>
+            </pre> Valid `rules` are `Required` and `Optional`
+          type: string
+          example: >-
+            W3sibmFtZSI6ImRlc3RpbmF0aW9uIiwidHlwZSI6InN0cmluZyIsImRlc2NyaXB0aW9uIjoiU3RlbGxhciBwdWJsaWMga2V5IHlvdSdkIGxpa2UgdG8gcGF5IiwicnVsZSI6Ik11c3QgYmUgYSB2YWxpZCBhbmQgZnVuZGVkIFN0ZWxsYXIgcHVibGljIGtleSJ9XQ
+        txFunctionFee:
+          description: >-
+            A signed, non-submitted transaction envelope XDR for a fee payment
+            to the TURRET_ADDRESS that is greater than or equal to the byte
+            length of the contract divided by the UPLOAD_DIVISOR set by the
+            turret
+          type: string
+          example: >-
+            AAAAAgAAAABTqjFHz0quLSka8SOrkw7R07aqDNUHAe+Qm5PX0jMiGwAAAGQAHfBZAAAADgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAB47DPzhNMoutc7krUC+kJ1BvEel4wkn4w1qzA7sOje0AAAAAAAAAAAAJiWgAAAAAAAAAAB0jMiGwAAAEAZjWTnxXY2lxVt0VSos6/Uvpoo3pXo6l+0Xk/P+sE5KDPwhAYkVQyXEBb8prEYprzp3aSlLF4TKcw3m/RM5IMK
+    ContractUploadResponse:
+      type: object
+      properties:
+        hash:
+          description: The SHA256 hash value of the contract
+          type: string
+          example: 78565516a844fd4dfc5a7fc7da822028b04ee0aeaf981a4a914d4510906a7a32
+        signer:
+          description: >-
+            The public key of the signer the turret will use to sign the
+            uploaded contract
+          type: string
+          example: GB6VNMGXKHS4UTIXW7U23ZQFWD7UJIWCJNQZR7ISNKBTYNULCFQKKPIK
+    PaymentRequired:
+      type: object
+      properties:
+        message:
+          description: Description of what failed
+          type: string
+          example: Failed to process txFunctionFee
+        turret:
+          description: The public key of the turret requiring payment
+          type: string
+          example: GB4OYM7TQTJSROWXHOJLKAX2IJ2QN4I6S6GCJH4MGWVTAO5Q5DPNADXX
+        cost:
+          description: The cost of the operation in lumens
+          type: string
+          example: "0.2740000"
+    TxFunctionInfo:
+      type: object
+      properties:
+        function:
+          description: The source code the function will execute
+          type: string
+          example: |-
+            (body) => {
+              return fetch('https://tss-contract-5wkzvvzhfmmp.runkit.sh', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+              })
+              .then((res) => {
+                if (res.ok)
+                  return res.text()
+                throw res
+              })
+            }
+        fields:
+          description: An array of input fields the turret accepts
+          type: array
+          example:
+            - name: destination
+              type: string
+              description: Stellar public key you'd like to pay
+              rule: Must be a valid and funded Stellar public key
+        signer:
+          description: The public key that signs for the contract
+          type: string
+          example: GB2BZXNG3JLUX4HYWRHREDMPJ4YINBLEHGZB4US2NJ2IPFNK65MCOOLG
+    Error:
+      type: object
+      properties:
+        message:
+          description: The error message
+          type: string
+        status:
+          description: The status code of the message
+          type: integer
+    TxFunctionResult:
+      type: object
+      properties:
+        xdr:
+          description: The transaction build by the txFunction in XDR form
+          type: string
+          example: >-
+            AAAAAgAAAABTqjFHz0quLSka8SOrkw7R07aqDNUHAe+Qm5PX0jMiGwAAAGQAHfBZAAAADwAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAArr/6wLdvAWAFR2sJFcN5Fy2xOkZ3C4Xrb54LTM9fAFgAAAAAAAAAAAJiWgAAAAAAAAAAA
+        signer:
+          description: >-
+            The public address of the account that generated the signature of
+            the XDR
+          type: string
+          example: GB2BZXNG3JLUX4HYWRHREDMPJ4YINBLEHGZB4US2NJ2IPFNK65MCOOLG
+        signature:
+          description: >-
+            The signature generated by the signer signing the xdr. NOTE - this
+            has not been applied to the transaction yet
+          type: string
+          example: >-
+            LsDA4lJN8V+4RuhPjV2xzDxnYXHtCD/y1IuXo5A5Q1aKJxz5O1v9GpmLWIZdZJrzAu/AWYvZQ1X+vmqXbcCZDw==
+        cost:
+          description: The cost in XLM for running the contract
+          type: string
+          example: "0.0119300"
+    FeePaymentResponse:
+      type: object
+      properties:
+        publicKey:
+          description: The public key of the Stellar account that owns the fees
+          type: string
+          example: GB6VNMGXKHS4UTIXW7U23ZQFWD7UJIWCJNQZR7ISNKBTYNULCFQKKPIK
+        lastModifiedTime:
+          description: >-
+            The epoch timestamp in milliseconds of the last time the fee balance
+            modified
+          type: number
+          example: 1631468533000
+        balance:
+          description: The current fee balance in XLM
+          type: string
+          example: 1.4234001
+    FeePaymentForm:
+      type: object
+      properties:
+        txFunctionFee:
+          description: >-
+            A signed, non-submitted transaction envelope XDR for a fee payment
+            to the TURRET_ADDRESS that is greater than or equal to the byte
+            length of the contract divided by the UPLOAD_DIVISOR set by the
+            turret
+          type: string
+          example: >-
+            AAAAAgAAAABTqjFHz0quLSka8SOrkw7R07aqDNUHAe+Qm5PX0jMiGwAAAGQAHfBZAAAADgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAB47DPzhNMoutc7krUC+kJ1BvEel4wkn4w1qzA7sOje0AAAAAAAAAAAAJiWgAAAAAAAAAAB0jMiGwAAAEAZjWTnxXY2lxVt0VSos6/Uvpoo3pXo6l+0Xk/P+sE5KDPwhAYkVQyXEBb8prEYprzp3aSlLF4TKcw3m/RM5IMK
+    CtrlAccounts:
+      type: object
+      properties:
+        functionHash:
+          description: The hash of the txFunction to manage the turret access of
+          type: string
+          example: 78565516a844fd4dfc5a7fc7da822028b04ee0aeaf981a4a914d4510906a7a32
+        sourceAccount:
+          description: The source account to create the transaction to heal with
+          type: string
+          example: GB2BZXNG3JLUX4HYWRHREDMPJ4YINBLEHGZB4US2NJ2IPFNK65MCOOLG
+        removeTurret:
+          description: >-
+            The public address of a turret to remove signing power for a
+            txFunction
+          type: string
+          example: GDLXUEYABS4ZR7XA4YYY7VKVD6DHFP7TFF2N2OXGBL6JL73HCXUFVDKX
+        addTurret:
+          description: >-
+            The public address of a turret to add signing powers for a
+            txFunction
+          type: string
+          example: GB4OYM7TQTJSROWXHOJLKAX2IJ2QN4I6S6GCJH4MGWVTAO5Q5DPNADXX
+    CtrlAccountsResult:
+      type: object
+      properties:
+        xdr:
+          description: The transaction built to heal the account
+          type: string
+          example: >-
+            AAAAAgAAAABTqjFHz0quLSka8SOrkw7R07aqDNUHAe+Qm5PX0jMiGwAAAGQAHfBZAAAADwAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAAArr/6wLdvAWAFR2sJFcN5Fy2xOkZ3C4Xrb54LTM9fAFgAAAAAAAAAAAJiWgAAAAAAAAAAA
+        signer:
+          description: The signer for this turret
+          type: string
+          example: GB2BZXNG3JLUX4HYWRHREDMPJ4YINBLEHGZB4US2NJ2IPFNK65MCOOLG
+        signature:
+          description: >-
+            The signature generated by the signer signing the xdr. NOTE - this
+            has not been applied to the transaction yet
+          type: string
+          example: >-
+            LsDA4lJN8V+4RuhPjV2xzDxnYXHtCD/y1IuXo5A5Q1aKJxz5O1v9GpmLWIZdZJrzAu/AWYvZQ1X+vmqXbcCZDw==
+servers:
+  - url: "http://valid-turret-address"
