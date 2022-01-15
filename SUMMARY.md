@@ -17,6 +17,7 @@
 ## Turret Hosts
 
 - [Getting Started](turret-hosts/getting-started.md)
+- [Anatomy of a Turret](turret-hosts/anatomy-of-a-turret.md)
 
 ## Api Reference
 
