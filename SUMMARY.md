@@ -12,6 +12,7 @@
 ## Developers
 
 - [Getting started](developers/getting-started.md)
+- [Interacting with Turrets](developers/interacting-with-turrets.md)
 
 ## Turret Hosts
 
