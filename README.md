@@ -1,22 +1,38 @@
-<div align="center">
-  <img alt="ReDoc logo" src="https://raw.githubusercontent.com/tyvdh/stellar-turrets/master/assets/tss-logo.png" width="100px" />
+# Stellar Turrets Docs
 
-  <!--- TODO: Make this go to tss.stellar.org/docs --->
-  [**Stellar Turrets Reference Documentation**](https://tyvdh.github.io/stellar-turrets/)
+## Welcome!
 
-</div>
+Stellar Turrets introduce a new way for applications to create decentralized, permissionless applications on the Stellar blockchain. This tool adds a layer 2 solution for decentralizing turing complete smart contracting for Stellar transactions, as well as adding a permissionless system for users to run smart contracts on.
 
-### Install
+### What you'll find here
 
-1. Clone this repo and run `npm install` in the repo root.
+Details on the foundations of Stellar Turrets including what they are, how they work, and why they exist.
 
-### Usage
+[Overview](overview/basics.md)
 
-#### `npm start`
-Starts the reference docs preview server.
+Information on how to utilize Stellar Turrets for an application or smart contract.
 
-#### `npm run build`
-Bundles the definition to the dist folder.
+[Developers](developers/getting-started.md)
 
-#### `npm test`
-Validates the definition.
+Resources on what it means to be a Stellar Turrets Host, and how to support the Turret Network.
+
+[Turret-Hosts](turret-hosts/getting-started.md)
+
+### Resources
+
+Links to external resources
+
+- [JavaScript Reference Implementation](https://github.com/stellar/stellar-turrets)
+- [Discord Group](https://discord.com/invite/d5RPb5gDrK)
+- [Turret Explorer](https://app.turrets.dev/)
+- [TSS Admin](https://github.com/Answap-io/tss-admin)
+
+### Projects
+
+Links to projects built on Stellar Turrets
+
+[//]: # "I am indifferent about the inclusion of projects. I would appreciate feedback on its value in docs"
+
+- [Smart NFTs](https://nft.kalepail.com/)
+- [YieldBlox](https://yieldblox.finance)
+- [Task.io](https://task.io/)
