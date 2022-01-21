@@ -1,3 +1,7 @@
+---
+description: Where you can learn about turrets.
+---
+
 # Stellar Turrets Docs
 
 ## Welcome!
@@ -22,17 +26,15 @@ Resources on what it means to be a Stellar Turrets Host, and how to support the 
 
 Links to external resources
 
-- [JavaScript Reference Implementation](https://github.com/stellar/stellar-turrets)
-- [Discord Group](https://discord.com/invite/d5RPb5gDrK)
-- [Turret Explorer](https://app.turrets.dev/)
-- [TSS Admin](https://github.com/Answap-io/tss-admin)
+* [JavaScript Reference Implementation](https://github.com/stellar/stellar-turrets)
+* [Discord Group](https://discord.com/invite/d5RPb5gDrK)
+* [Turret Explorer](https://app.turrets.dev)
+* [TSS Admin](https://github.com/Answap-io/tss-admin)
 
 ### Projects
 
 Links to projects built on Stellar Turrets
 
-[//]: # "I am indifferent about the inclusion of projects. I would appreciate feedback on its value in docs"
-
-- [Smart NFTs](https://nft.kalepail.com/)
-- [YieldBlox](https://yieldblox.finance)
-- [Task.io](https://task.io/)
+* [Smart NFTs](https://nft.kalepail.com)
+* [YieldBlox](https://yieldblox.finance)
+* [Task.io](https://task.io)
